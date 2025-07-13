@@ -3,8 +3,8 @@ import type { Metadata } from "next"
 import "./globals.css"
 
 export const metadata: Metadata = {
-  title: "Jaini Sai Abhiram - Terminal Portfolio",
-  description: "Interactive terminal-based portfolio of Jaini Sai Abhiram - Full Stack Developer & DevOps Engineer",
+  title: " Sai Vara Prasad Mandala - Terminal Portfolio",
+  description: "Interactive terminal-based portfolio of Mandala Sai Vara Prasad - Front End Developer",
 }
 
 export default function RootLayout({
