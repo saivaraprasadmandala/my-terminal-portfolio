@@ -185,7 +185,7 @@ Feel free to reach out for collaboration opportunities!`,
    • Linkedln Post: https://www.linkedin.com/posts/saivaraprasadmandala_sih2023-smartindiahackathon2023-kmec-activity-7145823852231602176-xlq3/
 `,
 
-    sudo: () => `[sudo] password for saivaraprasamandala: 
+    sudo: () => `[sudo] password for saivaraprasadmandala: 
 Sorry, try again.
 [sudo] password for saivaraprasadmandala: 
 Sorry, try again.
@@ -417,18 +417,15 @@ Type 'help' to see available commands.
             </span>
             <div className="relative flex-1 min-w-0">
               {/* Background Suggestion (ghost text) */}
-              {suggestion && (
+              {suggestion && suggestion.toLowerCase().startsWith(currentInput.toLowerCase()) && (
                 <span
-                  className="absolute left-0 top-0 text-[#a3be8c] text-sm lg:text-base font-mono pointer-events-none select-none"
+                  className="absolute left-0 top-0 text-[#e5f7ef] text-sm lg:text-base font-mono pointer-events-none select-none"
                   style={{
-                    whiteSpace: "pre",
+                    whiteSpace: 'pre',
                     zIndex: 1,
                   }}
                 >
-                  {currentInput}
-                  <span className="text-[#e5f7ef]">
-                    {suggestion.slice(currentInput.length)}
-                  </span>
+                  {suggestion.slice(currentInput.length)}
                 </span>
               )}
               {/* User Input */}
