@@ -410,23 +410,23 @@ Type 'help' to see available commands.
             </div>
           ))}
 
-          {/* Current Input Line with Suggestion */}
-          <div className="flex items-center mt-2">
+          {/* Current Input Line with Ghost Suggestion */}
+          <div className="flex items-center mt-2 flex-wrap">
             <span className="text-[#88c0d0] mr-2 flex-shrink-0 text-sm lg:text-base">
               saivaraprasadmandala@portfolio:~$
             </span>
-            <div className="relative flex-1 min-w-0">
-              {/* Background Suggestion (ghost text) */}
-              {suggestion && suggestion.toLowerCase().startsWith(currentInput.toLowerCase()) && (
-                <span
-                  className="absolute left-0 top-0 text-[#e5f7ef] text-sm lg:text-base font-mono pointer-events-none select-none"
+            <div className="flex-1 min-w-0 relative">
+              {/* Ghost Suggestion Background */}
+              {suggestion && currentInput && suggestion.toLowerCase().startsWith(currentInput.toLowerCase()) && (
+                <div
+                  className="absolute top-0 text-[#88c0d0] font-mono text-sm lg:text-base opacity-50 pointer-events-none whitespace-nowrap"
                   style={{
-                    whiteSpace: 'pre',
-                    zIndex: 1,
+                    left: `${currentInput.length * 0.6}em`,
+                    zIndex: 1
                   }}
                 >
                   {suggestion.slice(currentInput.length)}
-                </span>
+                </div>
               )}
               {/* User Input */}
               <input
@@ -435,12 +435,9 @@ Type 'help' to see available commands.
                 value={currentInput}
                 onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
-                className="bg-transparent border-none outline-none text-[#a3be8c] font-mono text-sm lg:text-base w-full"
+                className="bg-transparent border-none outline-none text-[#a3be8c] font-mono text-sm lg:text-base w-full relative"
                 style={{
-                  position: "relative",
-                  backgroundColor: "transparent",
-                  zIndex: 2,
-                  minWidth: "1ch",
+                  zIndex: 2
                 }}
                 autoFocus
               />
@@ -450,14 +447,14 @@ Type 'help' to see available commands.
 
         {/* Footer */}
         <div className="border-t border-[#b48ead] p-2 text-xs text-[#b48ead] flex justify-between bg-[#2e3440] flex-shrink-0">
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 lg:space-x-4 min-w-0 flex-1">
             <span className="truncate">saivaraprasadmandala@portfolio:~$</span>
             {suggestion && (
-              <span className="text-[#b48ead]">
+              <span className="text-[#b48ead] truncate">
                 <span className="hidden sm:inline">
-                  💡 Press Tab to complete "{suggestion}"
+                  💡 Press Tab or → to complete "{suggestion}"
                 </span>
-                <span className="sm:hidden">💡 Tap suggestion to complete</span>
+                <span className="sm:hidden">💡 Tab: {suggestion}</span>
               </span>
             )}
           </div>
