@@ -92,6 +92,8 @@ Programming Languages:
 Tools:
 • Postman
 • Git & Github
+• Vercel
+• Render
 
 Frontend Development:
 • ReactJS (Intermediate)
@@ -145,7 +147,7 @@ Databases:
 💼 LinkedIn: https://www.linkedin.com/in/saivaraprasadmandala/
 🐱 GitHub: https://github.com/saivaraprasadmandala
 🐦 Twitter/X: https://x.com/msvp2k04
-📄 Resume: https://drive.google.com/file/d/1MHnMBnzMfdIbu_HVCMd5C3Q4KL-K1Wqh/view?usp=sharing
+📄 Resume: https://drive.google.com/file/d/14FoMCGpcimseXgMVhxV0R1jVajy4GaVn/view?usp=sharing
 
 Feel free to reach out for collaboration opportunities!`,
 
@@ -153,7 +155,7 @@ Feel free to reach out for collaboration opportunities!`,
 
 🎓 Bachelor of Engineering in Computer Science(AI & ML)
    Keshav Memorial Engineering College (Osmania University)
-   CGPA: 7.7/10
+   CGPA: 7.8/10
    2021 - 2025
    Hyderabad, India
 
@@ -174,7 +176,8 @@ Feel free to reach out for collaboration opportunities!`,
 
 🚀 SIH IDE Bootcamp - 2024
    • Participated in Innovation Design and Entrepreneurship (IDE) Bootcamp at NIT GOA organized by MIC, AICTE, and Wadhwani Foundation.
-   • Delivered a compelling pitch with my team(Crafty Creators) for our business idea(Project Punarnavah) before a panel of jury members, garnering invaluable feedback.
+   • Pitched our startup idea to a panel of expert judges, receiving feedback on the value proposition, customer segment, and
+go-to-market strategy, which directly shaped the development of ”Punarnavah”, a circular economy platform.
    • Certificate: https://drive.google.com/file/d/15vfey1l3SPAV-Y4dNOlaJvvUpjw_-IAq/view?usp=sharing
    • Linkedln Post: https://www.linkedin.com/posts/saivaraprasadmandala_wadhwanifoundation-innovation-entrepreneurship-activity-7193283283072212992-o69N/
 
