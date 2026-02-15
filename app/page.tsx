@@ -2,8 +2,16 @@
 
 import type React from "react";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
+import { ErrorBoundary } from "@/components/error-boundary";
+import { aboutContent } from "@/data/about";
+import { skillsContent } from "@/data/skills";
+import { projectsContent } from "@/data/projects";
+import { contactContent } from "@/data/contact";
+import { educationContent } from "@/data/education";
+import { achievementsContent } from "@/data/achievements";
+import { experienceContent } from "@/data/experience";
 
 interface TerminalLine {
   type: "command" | "output" | "welcome";
@@ -13,29 +21,31 @@ interface TerminalLine {
 
 // Utility function to convert URLs in text to clickable links
 function linkify(text: string) {
-  const urlRegex = /(https?:\/\/[^\s]+)/g;
-  return text
-    .split("\n")
-    .map((line, i) =>
-      line.split(urlRegex).map((part, j) => {
-        if (urlRegex.test(part)) {
-          return (
-            <a
-              key={`link-${i}-${j}`}
-              href={part}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline text-blue-400 hover:text-blue-300 break-all"
-            >
-              {part}
-            </a>
-          );
-        }
-        return part;
-      })
-    )
-    .reduce((acc, curr, idx) => acc.concat(curr, <br key={`br-${idx}`} />), [])
-    .slice(0, -1);
+  const URL_PATTERN = /(https?:\/\/[^\s]+)/;
+
+  return text.split("\n").flatMap((line, i, arr) => {
+    const parts = line.split(URL_PATTERN).map((part, j) => {
+      if (URL_PATTERN.test(part)) {
+        return (
+          <a
+            key={`link-${i}-${j}`}
+            href={part}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline text-blue-400 hover:text-blue-300 break-all"
+          >
+            {part}
+          </a>
+        );
+      }
+      return part;
+    });
+
+    // Add <br /> between lines, but not after the last one
+    return i < arr.length - 1
+      ? [...parts, <br key={`br-${i}`} />]
+      : parts;
+  });
 }
 
 export default function TerminalPortfolio() {
@@ -45,9 +55,66 @@ export default function TerminalPortfolio() {
   const [historyIndex, setHistoryIndex] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
   const terminalRef = useRef<HTMLDivElement>(null);
+  const bottomRef = useRef<HTMLDivElement>(null);
   const [date, setDate] = useState<string>("");
   const [time, setTime] = useState<string>("");
   const [suggestion, setSuggestion] = useState<string | null>(null);
+  const [isTyping, setIsTyping] = useState(true);
+  const [typingText, setTypingText] = useState("");
+  const [soundEnabled, setSoundEnabled] = useState(false);
+  const soundEnabledRef = useRef(false);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+
+  // Keep ref in sync with state
+  useEffect(() => {
+    soundEnabledRef.current = soundEnabled;
+  }, [soundEnabled]);
+
+  // Mechanical keyboard "thock" — two-component synthesis
+  const playClick = useCallback(() => {
+    if (!soundEnabledRef.current) return;
+    if (!audioCtxRef.current) {
+      audioCtxRef.current = new AudioContext();
+    }
+    const ctx = audioCtxRef.current;
+    const now = ctx.currentTime;
+
+    // Slight random variation per keypress for natural feel
+    const v = 0.9 + Math.random() * 0.2;
+
+    // Component 1: Sharp click (filtered noise burst)
+    const bufSize = Math.floor(ctx.sampleRate * 0.02);
+    const noiseBuf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+    const data = noiseBuf.getChannelData(0);
+    for (let i = 0; i < bufSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufSize, 8);
+    }
+    const noise = ctx.createBufferSource();
+    noise.buffer = noiseBuf;
+    const hiPass = ctx.createBiquadFilter();
+    hiPass.type = "highpass";
+    hiPass.frequency.value = 2000;
+    const noiseGain = ctx.createGain();
+    noiseGain.gain.setValueAtTime(0.06 * v, now);
+    noise.connect(hiPass);
+    hiPass.connect(noiseGain);
+    noiseGain.connect(ctx.destination);
+    noise.start(now);
+    noise.stop(now + 0.02);
+
+    // Component 2: Low "thock" resonance
+    const osc = ctx.createOscillator();
+    const oscGain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(150 * v, now);
+    osc.frequency.exponentialRampToValueAtTime(50, now + 0.06);
+    oscGain.gain.setValueAtTime(0.04 * v, now);
+    oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+    osc.connect(oscGain);
+    oscGain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.06);
+  }, []);
 
   useEffect(() => {
     const updateDateTime = () => {
@@ -62,131 +129,24 @@ export default function TerminalPortfolio() {
 
   const commands = {
     help: () => `Available commands:
-      help     - Show available commands
-      about    - Know more about me
-      projects - View my projects
-      skills   - See my technical skills
-      contact  - Get my contact information
-      education - View my educational background
-      achievements - View my achievements
-      clear    - Clear the terminal
-      sudo     - Try it and see what happens!`,
+      help         - Show commands
+      about        - Know more about me
+      experience   - My work experience
+      projects     - View my projects
+      skills       - My technical skills
+      contact      - Get my contact info
+      education    - My education
+      achievements - My achievements
+      clear        - Clear the terminal
+      sudo         - Try it ;)`,
 
-    about: () =>
-      `
-Hi 👋, I'm Sai Vara Prasad Mandala — an adaptive developer from Hyderabad - India, passionate about building tech that makes life better. From 'enabling crowds to shape music together'  or 'transforming waste into opportunity', I love creating solutions that make a real-world difference.
-
-(Wondering about ' ' rgt?? Let's just say my projects might surprise you 😉)
-
-I hold a Bachelor's degree in Computer Science(AI & ML) from Keshav Memorial Engineering College, affiliated with Osmania University.
-      
-A passion for tech took me from mobile development to machine learning & AI. I found my niche in web development, where I constantly learn, build solutions, and innovate to create impactful experiences in the ever-evolving digital landscape.`,
-
-    skills: () => `Technical Skills:
-
-Programming Languages:
-• Java (Intermediate)
-• JavaScript (Intermediate)  
-• TypeScript (Basic)
-
-Tools:
-• Postman
-• Git & Github
-• Vercel
-• Render
-
-Frontend Development:
-• ReactJS (Intermediate)
-• NextJS (Basic)
-• TailwindCSS
-• Shadcn/ui
-
-Backend Development:
-• NodeJS (Intermediate)
-• ExpressJS (Intermediate)
-• Prisma (Basic)
-
-Databases:
-• MongoDB (Intermediate)
-• PostgreSQL (Basic)
-• MySQL (Intermediate)`,
-
-    projects: () => `Recent Projects:
-
-1. Musivo - A Collaborative Music Platform
-   • Where users can search Spotify songs, add to a shared queue, and vote for favorites. 
-   • The most liked track plays next. 
-   • Ideal for pubs,cafes, parties, and events with host-controlled playback.
-   • GitHub: https://github.com/saivaraprasadmandala/Musivo
-   • Live: https://musivo.builtforthis.tech/
-
-2. Punarnavah - Transforming Waste into Oppurtunity (Selected for SIH IDE Bootcamp at NIT Goa)
-   • A circular economy-driven platform linking households, artisans, and industries to promote waste reuse.
-   • Enables artisans to source upcyclable materials, create upcycled products, and sell them online for income.
-   • GitHub: https://github.com/saivaraprasadmandala/Punarnavah
-   • Live: https://punarnavah.abhiramverse.tech/
-
-3. Auditronix
-   • Smart Contract auditing tool
-   • GitHub: https://github.com/saivaraprasadmandala/auditronix-smart-contract-auditor
-   • Live: https://auditronix-smart-contract-auditor.builtforthis.tech/
-
-4. QrifyME
-   • An event management system for real-time attendee tracking via location services
-   • GitHub: https://github.com/saivaraprasadmandala/QRifyME
-   • APK: https://drive.google.com/file/d/1KrCdgUeWulzSuOojyks1PtK5acpHuumN/view
-
-5. DeepFake Detection
-   • A DeepFake Detection Engine designed to identify the manipulated images
-   • GitHub: https://github.com/saivaraprasadmandala/DeepFake-Detection
-`,
-
-    contact: () => `Get in Touch:
-
-📧 Email: mandalasaivaraprasad@gmail.com
-💼 LinkedIn: https://www.linkedin.com/in/saivaraprasadmandala/
-🐱 GitHub: https://github.com/saivaraprasadmandala
-🐦 Twitter/X: https://x.com/msvp2k04
-📄 Resume: https://drive.google.com/file/d/14FoMCGpcimseXgMVhxV0R1jVajy4GaVn/view?usp=sharing
-
-Feel free to reach out for collaboration opportunities!`,
-
-    education: () => `Educational Background:
-
-🎓 Bachelor of Engineering in Computer Science(AI & ML)
-   Keshav Memorial Engineering College (Osmania University)
-   CGPA: 7.8/10
-   2021 - 2025
-   Hyderabad, India
-
-🏫 Intermediate
-   Keshav Smarak Junior College (TSBIE)
-   Percentage: 95.8%
-   2019 - 2021
-   Hyderabad, India
-
-🏫 Class X
-   Oxford Grammar High School (Himayathnagar)
-   CGPA: 9.8/10
-   2019
-   Hyderabad, India
-`,
-
-    achievements: () => `Achievements:
-
-🚀 SIH IDE Bootcamp - 2024
-   • Participated in Innovation Design and Entrepreneurship (IDE) Bootcamp at NIT GOA organized by MIC, AICTE, and Wadhwani Foundation.
-   • Pitched our startup idea to a panel of expert judges, receiving feedback on the value proposition, customer segment, and
-go-to-market strategy, which directly shaped the development of ”Punarnavah”, a circular economy platform.
-   • Certificate: https://drive.google.com/file/d/15vfey1l3SPAV-Y4dNOlaJvvUpjw_-IAq/view?usp=sharing
-   • Linkedln Post: https://www.linkedin.com/posts/saivaraprasadmandala_wadhwanifoundation-innovation-entrepreneurship-activity-7193283283072212992-o69N/
-
-🏆 SMART INDIA HACKATHON - 2023
-   • Finalists in Smart India Hackathon - 2023, conducted AICTE , MoE and Central Government of India.
-   • Built a waste upcycling project "Resculpt"(Initial Version of Project Punarnavah).
-   • Certificate: https://drive.google.com/file/d/16FvGZ8zWz3Bd7LN5Giuh9r_Uj3dXZsgi/view?usp=sharing
-   • Linkedln Post: https://www.linkedin.com/posts/saivaraprasadmandala_sih2023-smartindiahackathon2023-kmec-activity-7145823852231602176-xlq3/
-`,
+    about: () => aboutContent,
+    skills: () => skillsContent,
+    projects: () => projectsContent,
+    contact: () => contactContent,
+    education: () => educationContent,
+    achievements: () => achievementsContent,
+    experience: () => experienceContent,
 
     sudo: () => `[sudo] password for saivaraprasadmandala: 
 Sorry, try again.
@@ -225,31 +185,87 @@ Nice try! 😆😅😉 But you don't have sudo access to my portfolio.`,
   };
 
   useEffect(() => {
-    const welcomeMessage = `Welcome to my interactive portfolio terminal! haha!
-    
-Type 'help' to see available commands.
-    
+    const movieQuotes = [
+      `$ git commit -m "feat: looking for someone who commits — not just to main"`,
+      `"The first rule of this terminal: you do not leave without typing a command."`,
+      `"The first rule of my code: you do not push to main on a Friday."`,
+      `"The first rule of this portfolio: you do not just scroll — you type."`,
+    ];
+    const randomQuote = movieQuotes[Math.floor(Math.random() * movieQuotes.length)];
+
+    const now = new Date();
+    const loginDate = now.toLocaleDateString("en-US", {
+      weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit"
+    });
+
+    const bootLines = [
+      { text: "portfolio-os v2.0 | Darwin ARM64", delay: 0 },
+      { text: "(c) 2025 Sai Vara Prasad Mandala\n", delay: 200 },
+      { text: "Running hardware diagnostics...\n", delay: 600 },
+      { text: "CPU    Apple-flavored brain ........... ✓", delay: 900 },
+      { text: "DISK   6 projects, 0 regrets .......... ✓", delay: 1300 },
+      { text: "CODEC  Can debate films for hours ..... ✓\n", delay: 1700 },
+      { text: "[  ★  ] Mounting /Users/saivaraprasad", delay: 2100 },
+      { text: "[  ★  ] Starting Terminal.app", delay: 2400 },
+      { text: "[  ★  ] Loading portfolio data", delay: 2700 },
+      { text: "[  ★  ] System ready\n", delay: 3000 },
+      { text: randomQuote + "\n", delay: 3400 },
+      { text: `Last login: ${loginDate} on ttys000`, delay: 3800 },
+    ];
+
+    const welcomeText = `Welcome! Type 'help' to see available commands.
 💡 Tip: Type a few letters and press Tab to auto-complete!`;
 
-    setLines([
-      {
-        type: "welcome",
-        content: "saivaraprasadmandala@portfolio:~$ welcome",
-      },
-      {
-        type: "output",
-        content: `Hi, I'm Sai Vara Prasad Mandala, a Frontend Developer.`,
-      },
-      { type: "output", content: "" },
-      { type: "output", content: welcomeMessage },
-    ]);
+    setLines([]);
+    setIsTyping(true);
+    setTypingText("");
+
+    const timeouts: NodeJS.Timeout[] = [];
+
+    // Show boot lines one by one
+    bootLines.forEach(({ text, delay }) => {
+      const t = setTimeout(() => {
+        setLines(prev => [...prev, { type: "output", content: text }]);
+      }, delay);
+      timeouts.push(t);
+    });
+
+    // After boot, show welcome with typing animation
+    const welcomeTimeout = setTimeout(() => {
+      setLines(prev => [
+        ...prev,
+        { type: "welcome", content: "saivaraprasadmandala@portfolio:~$ welcome" },
+      ]);
+
+      let charIndex = 0;
+      setTypingText("");
+
+      const typingInterval = setInterval(() => {
+        if (charIndex < welcomeText.length) {
+          setTypingText(welcomeText.slice(0, charIndex + 1));
+          charIndex++;
+        } else {
+          clearInterval(typingInterval);
+          setIsTyping(false);
+          setTypingText("");
+          setLines(prev => [
+            ...prev,
+            { type: "output", content: welcomeText },
+          ]);
+        }
+      }, 20);
+
+      timeouts.push(typingInterval as unknown as NodeJS.Timeout);
+    }, 4200);
+    timeouts.push(welcomeTimeout);
+
+    return () => timeouts.forEach(t => clearTimeout(t));
   }, []);
 
+  // Smooth scroll to bottom when new lines are added
   useEffect(() => {
-    if (terminalRef.current) {
-      terminalRef.current.scrollTop = terminalRef.current.scrollHeight;
-    }
-  }, [lines]);
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [lines, typingText]);
 
   const handleCommand = (cmd: string) => {
     const trimmedCmd = cmd.trim().toLowerCase();
@@ -294,6 +310,7 @@ Type 'help' to see available commands.
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    playClick();
     if (e.key === "Enter") {
       handleCommand(currentInput);
       setCurrentInput("");
@@ -345,9 +362,10 @@ Type 'help' to see available commands.
   };
 
   return (
+    <ErrorBoundary>
     <div className="h-screen bg-[#2e3440] text-[#a3be8c] font-mono flex flex-col lg:flex-row overflow-hidden">
       {/* Left Panel - Profile (Fixed, No Scroll) */}
-      <div className="w-full lg:w-1/3 xl:w-1/4 h-1/3 lg:h-full p-4 lg:p-6 border-b lg:border-b-0 lg:border-r border-[#b48ead] flex flex-col items-center bg-[#2e3440] overflow-hidden">
+      <div className="w-full lg:w-1/3 xl:w-1/4 lg:h-full p-3 lg:p-6 border-b lg:border-b-0 lg:border-r border-[#b48ead] flex flex-col items-center bg-[#2e3440] shrink-0">
         {/* Header Section */}
         <div className="mb-3 lg:mb-4 text-center flex-shrink-0">
           <h1 className="text-lg lg:text-xl font-bold text-[#a3be8c] truncate">
@@ -359,7 +377,7 @@ Type 'help' to see available commands.
         </div>
 
         {/* Profile Image */}
-        <div className="w-24 h-24 sm:w-32 sm:h-32 lg:w-48 lg:h-48 mb-3 lg:mb-6 border-2 border-[#b48ead] rounded-lg overflow-hidden bg-[#2e3440] flex-shrink-0">
+        <div className="w-20 h-20 sm:w-28 sm:h-28 lg:w-48 lg:h-48 mb-2 lg:mb-6 border-2 border-[#b48ead] rounded-lg overflow-hidden bg-[#2e3440] flex-shrink-0">
           <Image
             src="/profile.jpeg"
             alt="Mandala Sai Vara Prasad"
@@ -374,21 +392,47 @@ Type 'help' to see available commands.
           {/* Location & Status */}
           <div className="border border-[#b48ead] p-2 lg:p-3 rounded bg-[#2e3440] bg-opacity-20">
             <p className="mb-1">📍 Hyderabad, India</p>
-            <p className="mb-1">🎓 Computer Science Student</p>
+            <p className="mb-1">🎓 B.E. in CS (AI & ML) '25</p>
+            <p className="mb-1">🟢 Open to opportunities</p>
           </div>
         </div>
       </div>
 
       {/* Right Panel - Terminal (Scrollable) */}
-      <div className="flex-1 flex flex-col h-2/3 lg:h-full overflow-hidden">
-        {/* Header - Commands */}
-        <div className="border-b border-[#b48ead] p-2 lg:p-3 text-xs lg:text-sm bg-[#2e3440] flex-shrink-0 overflow-x-auto">
-          <div className="whitespace-nowrap">
-            <span className="text-[#a3be8c]">
-              help | about | projects | skills | contact | education |
-              achievements | sudo | clear
-            </span>
+      <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+        {/* Header - Clickable Commands with Pipe Separators */}
+        <div className="border-b border-[#b48ead] px-2 py-1.5 lg:px-3 lg:py-2 bg-[#2e3440] flex-shrink-0 overflow-x-auto">
+          <div className="flex items-center whitespace-nowrap">
+            {/* Sound toggle */}
+            <button
+              onClick={() => { setSoundEnabled(prev => !prev); inputRef.current?.focus(); }}
+              className="px-1.5 py-0.5 lg:px-2 lg:py-1 text-xs lg:text-sm text-[#b48ead] border border-transparent rounded hover:border-[#b48ead] hover:bg-[#b48ead]/10 transition-all duration-150 cursor-pointer mr-1 flex-shrink-0"
+              title={soundEnabled ? "Mute keypress sounds" : "Enable keypress sounds"}
+            >
+              {soundEnabled ? "🔊" : "🔇"}
+            </button>
+            <span className="text-[#b48ead] text-xs mx-0.5 select-none">│</span>
+            {Object.keys(commands).map((cmd, index, arr) => (
+              <span key={cmd} className="flex items-center">
+                <button
+                  onClick={() => handleCommand(cmd)}
+                  className="px-1.5 py-0.5 lg:px-2 lg:py-1 text-xs lg:text-sm text-[#a3be8c] border border-transparent rounded hover:border-[#a3be8c] hover:bg-[#a3be8c]/10 active:bg-[#a3be8c]/20 transition-all duration-150 cursor-pointer"
+                >
+                  {cmd}
+                </button>
+                {index < arr.length - 1 && (
+                  <span className="text-[#a3be8c] text-xs mx-0.5 select-none">|</span>
+                )}
+              </span>
+            ))}
           </div>
+        </div>
+
+        {/* Mobile-only disclaimer */}
+        <div className="lg:hidden px-3 py-1.5 bg-[#2e3440] border-b border-[#b48ead] text-center">
+          <p className="text-[10px] text-[#d8dee9] opacity-70">
+            you're checking me out on a phone 😒? fair, but I look better on a widescreen 💻 😉
+          </p>
         </div>
 
         {/* Terminal Content (Scrollable Area) */}
@@ -398,7 +442,7 @@ Type 'help' to see available commands.
           onClick={focusInput}
         >
           {lines.map((line, index) => (
-            <div key={index} className="mb-1">
+            <div key={index} className="mb-1 line-fade-in">
               {line.type === "command" && (
                 <div className="text-[#88c0d0] break-all">{line.content}</div>
               )}
@@ -413,22 +457,34 @@ Type 'help' to see available commands.
             </div>
           ))}
 
+          {/* Typing animation display */}
+          {isTyping && typingText && (
+            <div className="mb-1">
+              <div className="text-[#eceff4] whitespace-pre-wrap leading-relaxed text-sm lg:text-base break-words">
+                {typingText}<span className="typing-cursor">&nbsp;</span>
+              </div>
+            </div>
+          )}
+
           {/* Current Input Line with Ghost Suggestion */}
           <div className="flex items-center mt-2 flex-wrap">
             <span className="text-[#88c0d0] mr-2 flex-shrink-0 text-sm lg:text-base">
               saivaraprasadmandala@portfolio:~$
             </span>
-            <div className="flex-1 min-w-0 relative">
-              {/* Ghost Suggestion Background */}
+            <div className="flex-1 min-w-0 relative h-6 lg:h-7">
+              {/* Ghost Suggestion - full overlay behind input */}
               {suggestion && currentInput && suggestion.toLowerCase().startsWith(currentInput.toLowerCase()) && (
                 <div
-                  className="absolute top-0 text-[#88c0d0] font-mono text-sm lg:text-base opacity-50 pointer-events-none whitespace-nowrap"
-                  style={{
-                    left: `${currentInput.length * 0.6}em`,
-                    zIndex: 1
-                  }}
+                  className="absolute inset-0 font-mono text-sm lg:text-base pointer-events-none whitespace-nowrap flex items-center p-0 m-0 leading-6 lg:leading-7"
+                  style={{ zIndex: 1 }}
+                  aria-hidden="true"
                 >
-                  {suggestion.slice(currentInput.length)}
+                  {/* Invisible portion matching typed text */}
+                  <span className="invisible">{currentInput}</span>
+                  {/* Visible ghost remainder */}
+                  <span className="text-[#88c0d0] opacity-50">
+                    {suggestion.slice(currentInput.length)}
+                  </span>
                 </div>
               )}
               {/* User Input */}
@@ -438,14 +494,24 @@ Type 'help' to see available commands.
                 value={currentInput}
                 onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
-                className="bg-transparent border-none outline-none text-[#a3be8c] font-mono text-sm lg:text-base w-full relative"
-                style={{
-                  zIndex: 2
-                }}
+                className="absolute inset-0 bg-transparent border-none outline-none text-[#a3be8c] font-mono text-sm lg:text-base w-full caret-transparent p-0 m-0 leading-6 lg:leading-7 h-full"
+                style={{ zIndex: 2 }}
                 autoFocus
               />
+              {/* Blinking cursor - positioned using invisible text measurement */}
+              <div
+                className="absolute inset-0 pointer-events-none flex items-center p-0 m-0 leading-6 lg:leading-7"
+                style={{ zIndex: 3 }}
+                aria-hidden="true"
+              >
+                <span className="invisible font-mono text-sm lg:text-base">{currentInput}</span>
+                <span className="terminal-cursor text-[#a3be8c] text-sm lg:text-base">▌</span>
+              </div>
             </div>
           </div>
+
+          {/* Scroll anchor */}
+          <div ref={bottomRef} />
         </div>
 
         {/* Footer */}
@@ -468,5 +534,6 @@ Type 'help' to see available commands.
         </div>
       </div>
     </div>
+    </ErrorBoundary>
   );
 }
