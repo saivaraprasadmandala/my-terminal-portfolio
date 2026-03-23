@@ -87,7 +87,8 @@ export default function TerminalPortfolio() {
       contact      - Get my contact info
       sudo         - Try it ;)
       clear        - Clear the terminal`,
-
+    
+    // TODO: move these to a separate file later, getting too big tbh
     about: () => aboutContent,
     experience: () => experienceContent,
     projects: () => projectsContent,
@@ -109,17 +110,20 @@ Nice try! 😆😅😉 But you don't have sudo access to my portfolio.`,
   };
 
   // Function to get suggestion based on current input
-  const getSuggestion = (input: string): string | null => {
+  // FIXME: this is kind of slow on older devices if we add too many commands
+  // might need a debounce helper here later down the line if performance tanks
+  const fetchAutocompleteSuggestion = (input: string): string | null => {
     if (!input.trim()) return null;
 
-    const availableCommands = Object.keys(commands);
-    const matches = availableCommands.filter((cmd) =>
+    const available_cmds = Object.keys(commands);
+    const m = available_cmds.filter((cmd) =>
       cmd.toLowerCase().startsWith(input.toLowerCase())
     );
 
     // Return the first match that's different from current input
+    // hacky way to prevent it from suggesting the exact word we just typed
     return (
-      matches.find((match) => match.toLowerCase() !== input.toLowerCase()) ||
+      m.find((match) => match.toLowerCase() !== input.toLowerCase()) ||
       null
     );
   };
@@ -297,7 +301,7 @@ Nice try! 😆😅😉 But you don't have sudo access to my portfolio.`,
     setCurrentInput(value);
 
     // Get suggestion based on current input
-    const newSuggestion = getSuggestion(value);
+    const newSuggestion = fetchAutocompleteSuggestion(value);
     setSuggestion(newSuggestion);
 
     // Reset history navigation
@@ -312,7 +316,7 @@ Nice try! 😆😅😉 But you don't have sudo access to my portfolio.`,
     <ErrorBoundary>
     <div className="h-screen bg-background text-primary font-mono flex flex-col lg:flex-row overflow-hidden">
       {/* Left Panel - Profile */}
-      <div className="w-full lg:w-1/3 xl:w-1/4 lg:h-full p-3 lg:p-6 border-b lg:border-b-0 lg:border-r border-border bg-background/50 backdrop-blur-sm shrink-0 flex flex-col justify-center lg:justify-start">
+      <div className="w-full lg:w-1/3 xl:w-1/4 lg:h-full p-4 lg:p-6 border-b lg:border-b-0 lg:border-r border-border bg-background/50 backdrop-blur-sm shrink-0 flex flex-col justify-start">
         <div className="flex flex-row items-center gap-4 sm:gap-6 lg:flex-col lg:gap-0 lg:items-center">
           {/* Profile Image */}
           <div className="w-24 h-24 sm:w-28 sm:h-28 lg:w-48 lg:h-48 lg:mb-6 border border-primary/40 rounded-lg overflow-hidden bg-background/50 flex-shrink-0 hacker-border-glow">
@@ -321,13 +325,13 @@ Nice try! 😆😅😉 But you don't have sudo access to my portfolio.`,
               alt="Mandala Sai Vara Prasad"
               width={200}
               height={200}
-              className="w-full h-full object-cover object-[center_10%]"
+              className="w-full h-full object-cover object-top"
             />
           </div>
 
           {/* Name & Titles */}
           <div className="flex-1 lg:w-full lg:text-center min-w-0">
-            <h1 className="text-sm sm:text-base lg:text-xl font-bold text-primary hacker-glow truncate">
+            <h1 className="text-base sm:text-lg lg:text-xl font-bold text-primary hacker-glow leading-tight">
               Sai Vara Prasad Mandala
             </h1>
             <p className="text-[10px] lg:text-xs text-muted-foreground uppercase tracking-widest mt-0.5 lg:mt-1">
