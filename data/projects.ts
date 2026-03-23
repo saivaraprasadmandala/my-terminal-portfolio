@@ -10,7 +10,7 @@ export const projectsContent = `Recent Projects:
    Circular economy platform connecting households, artisans, and industries to upcycle waste into marketable products. Selected for SIH IDE Bootcamp at NIT Goa.
    Stack: React, Node, Express, Prisma, PostgreSQL, TS
    GitHub: https://github.com/saivaraprasadmandala/Punarnavah
-   Live: https://punarnavah.abhiramverse.tech/
+   Live: https://punarnavah.vercel.app/
 
 3. Auditronix
    Smart Contract auditing tool.

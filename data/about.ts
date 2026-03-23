@@ -1,9 +1,9 @@
-export const aboutContent = `
-Hi 👋, I'm Sai Vara Prasad — an adaptive developer from Hyderabad, India, passionate about building tech that makes life better.
+export const aboutContent = `Hi 👋, I’m Sai Vara Prasad Mandala.
 
-I hold a B.E. in CS (AI & ML) from Keshav Memorial Engineering College, affiliated with Osmania University. I've worked as a Frontend Developer at StartDate Technologies and interned at LoomyLabs (now LoomyGO).
+I’m a Frontend Developer based in Hyderabad, India, holding a B.E. in Computer Science.
 
-A passion for tech took me from mobile development to ML & AI. I found my niche in web development, constantly learning and building solutions in the ever-evolving digital landscape.
+During my internships at StartDate Technologies and LoomyGO, I learned exactly how real-world products are conceptualized, planned, and built for production.
 
-From 'enabling crowds to shape music' to 'transforming waste into opportunity' — I love creating solutions that make a real-world difference.
-(Curious? Type 'projects' to explore 😉)`;
+I love taking on projects that make a difference. My recent work includes an application that lets crowds dictate live music and a platform turning raw waste into economic opportunity.
+
+(Want proof? Type 'projects')`;
