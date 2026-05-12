@@ -4,6 +4,7 @@ import type React from "react";
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
+import { Mail, RefreshCw } from "lucide-react";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { aboutContent } from "@/data/about";
 import { skillsContent } from "@/data/skills";
@@ -49,6 +50,21 @@ function linkify(text: string) {
   });
 }
 
+const MOVIE_QUOTES = [
+  `$ git commit -m "feat: looking for someone who commits — not just to main"`,
+  `"The first rule of my code: you do not push to main on a Friday."`,
+  `> 404: Sleep not found. Fueling with 😉🌝`,
+  `> "It works on my machine" is a valid architectural pattern.`,
+  `$ rm -rf node_modules && npm install && pray`,
+  `> Debugging: Being the detective where you are also the murderer.`,
+  `> I don't always test my code, but when I do, it's in production.`,
+  `$ sudo make me a frontend developer`,
+  `> Started as a vibe coder, now I actually read the docs. Character development.`,
+  `> Transitioning from "it works, don't touch it" to "let me understand why".`,
+  `$ npm install vibes --save-dev && npm run actual-learning`,
+];
+
+
 export default function TerminalPortfolio() {
   const [lines, setLines] = useState<TerminalLine[]>([]);
   const [currentInput, setCurrentInput] = useState("");
@@ -62,7 +78,43 @@ export default function TerminalPortfolio() {
   const [suggestion, setSuggestion] = useState<string | null>(null);
   const [isTyping, setIsTyping] = useState(true);
   const [typingText, setTypingText] = useState("");
+  const [isProfileFlipped, setIsProfileFlipped] = useState(false);
+  const [showFlipTooltip, setShowFlipTooltip] = useState(false);
+  const [hasFlippedOnce, setHasFlippedOnce] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!hasFlippedOnce) {
+        setShowFlipTooltip(true);
+      }
+    }, 5000); // Wait 5 seconds before showing tooltip
+    return () => clearTimeout(timer);
+  }, [hasFlippedOnce]);
+
+  const handleProfileFlip = () => {
+    setIsProfileFlipped(!isProfileFlipped);
+    if (!hasFlippedOnce) {
+      setHasFlippedOnce(true);
+      setShowFlipTooltip(false);
+    }
+  };
   const { down, up } = useAudio(true);
+  const [quoteIndex, setQuoteIndex] = useState(0);
+  const [cursorOn, setCursorOn] = useState(true);
+
+  // Rotate quotes
+  useEffect(() => {
+    const id = setInterval(() => {
+      setQuoteIndex((prev) => (prev + 1) % MOVIE_QUOTES.length);
+    }, 4000);
+    return () => clearInterval(id);
+  }, []);
+
+  // Cursor blink
+  useEffect(() => {
+    const id = setInterval(() => setCursorOn((v) => !v), 530);
+    return () => clearInterval(id);
+  }, []);
 
   useEffect(() => {
     const updateDateTime = () => {
@@ -137,30 +189,17 @@ Nice try! 😆😅😉 But you don't have sudo access to my portfolio.`,
   };
 
   useEffect(() => {
-    const movieQuotes = [
-      `$ git commit -m "feat: looking for someone who commits — not just to main"`,
-      `"The first rule of this terminal: you do not leave without typing a command."`,
-      `"The first rule of my code: you do not push to main on a Friday."`,
-      `"The first rule of this portfolio: you do not just scroll — you type."`,
-    ];
-    const randomQuote = movieQuotes[Math.floor(Math.random() * movieQuotes.length)];
 
-    const now = new Date();
-    const loginDate = now.toLocaleDateString("en-US", {
-      weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit"
-    });
 
     const bootLines = [
-      { text: "portfolio-os v2.0 | Darwin ARM64", delay: 0 },
-      { text: "Running hardware diagnostics...\n", delay: 600 },
-      { text: "CPU    CMD > CTRL (Surviving all day) . ✓", delay: 900 },
-      { text: "DISK   6 projects, 0 regrets .......... ✓", delay: 1300 },
-      { text: "GPU    Can render film debates for hours. ✓\n", delay: 1700 },
-      { text: randomQuote + "\n", delay: 2100 },
-      { text: `Last login: ${loginDate} on ttys000`, delay: 2500 },
+      { text: "portfolio-os v2.0 | Booting consciousness...", delay: 0 },
+      { text: "BIOS   B.E. CSE '25 degree authenticated .. ✓\n", delay: 600 },
+      { text: "CPU    CMD > CTRL (Surviving all day) ..... ✓", delay: 900 },
+      { text: "DISK   6 projects, 2 internships, 0 regrets ✓", delay: 1300 },
+      { text: "GPU    Can render film debates for hours .. ✓\n", delay: 1700 },
     ];
 
-    const welcomeText = `Welcome! Type a command or click one from the top menu.
+    const welcomeText = `Welcome! Type a command below to explore.
 💡 Tip: Type a few letters and press Tab to auto-complete!`;
 
     setLines([]);
@@ -203,7 +242,7 @@ Nice try! 😆😅😉 But you don't have sudo access to my portfolio.`,
       }, 20);
 
       timeouts.push(typingInterval as unknown as NodeJS.Timeout);
-    }, 2900);
+    }, 2100);
     timeouts.push(welcomeTimeout);
 
     return () => timeouts.forEach(t => clearTimeout(t));
@@ -316,17 +355,63 @@ Nice try! 😆😅😉 But you don't have sudo access to my portfolio.`,
     <ErrorBoundary>
     <div className="h-screen bg-background text-primary font-mono flex flex-col lg:flex-row overflow-hidden">
       {/* Left Panel - Profile */}
-      <div className="w-full lg:w-1/3 xl:w-1/4 lg:h-full p-4 lg:p-6 border-b lg:border-b-0 lg:border-r border-border bg-background/50 backdrop-blur-sm shrink-0 flex flex-col justify-start">
+      <div className="w-full lg:w-[360px] xl:w-[420px] lg:h-full p-4 lg:p-6 border-b lg:border-b-0 lg:border-r border-border bg-background/50 backdrop-blur-sm shrink-0 flex flex-col justify-start">
         <div className="flex flex-row items-center gap-4 sm:gap-6 lg:flex-col lg:gap-0 lg:items-center">
-          {/* Profile Image */}
-          <div className="w-24 h-24 sm:w-28 sm:h-28 lg:w-48 lg:h-48 lg:mb-6 border border-primary/40 rounded-lg overflow-hidden bg-background/50 flex-shrink-0 hacker-border-glow">
-            <Image
-              src="/profile.jpeg"
-              alt="Mandala Sai Vara Prasad"
-              width={200}
-              height={200}
-              className="w-full h-full object-cover object-top"
-            />
+          {/* Profile Image with 3D Flip */}
+          <div 
+            className="relative w-24 h-24 sm:w-28 sm:h-28 lg:w-48 lg:h-48 lg:mb-6 flex-shrink-0 cursor-pointer group"
+            style={{ perspective: '1000px' }}
+            onClick={handleProfileFlip}
+          >
+            {/* Tooltip */}
+            {showFlipTooltip && (
+              <div className="absolute -top-10 left-1/2 -translate-x-1/2 whitespace-nowrap bg-primary/10 text-primary border border-primary/30 px-3 py-1 text-[10px] rounded animate-bounce z-20 backdrop-blur-sm pointer-events-none transition-opacity duration-300">
+                flip to reveal 😉
+                <div className="absolute top-full left-1/2 -translate-x-1/2 border-[5px] border-transparent border-t-primary/30"></div>
+              </div>
+            )}
+            
+            {/* 3D Inner Container */}
+            <div 
+              className="w-full h-full transition-transform duration-700 ease-out relative"
+              style={{ 
+                transformStyle: 'preserve-3d', 
+                transform: isProfileFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)'
+              }}
+            >
+              {/* Front side: "no pfp" image */}
+              <div 
+                className="absolute inset-0 w-full h-full border border-primary/40 rounded-full overflow-hidden bg-white hacker-border-glow shadow-[0_0_15px_rgba(0,245,212,0.2)]"
+                style={{ backfaceVisibility: 'hidden' }}
+              >
+                <Image
+                  src="/flip-profile-pic.png"
+                  alt="No pfp because you'll fall in love"
+                  width={200}
+                  height={200}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+
+              {/* Back side: Actual profile image */}
+              <div 
+                className="absolute inset-0 w-full h-full border border-primary/40 rounded-full overflow-hidden bg-background/50 hacker-border-glow shadow-[0_0_15px_rgba(0,245,212,0.2)]"
+                style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
+              >
+                <Image
+                  src="/profile-zoomed.png"
+                  alt="Mandala Sai Vara Prasad"
+                  width={200}
+                  height={200}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            </div>
+
+            {/* Always-visible Flip Indicator Icon */}
+            <div className="absolute bottom-0 right-0 lg:bottom-2 lg:right-2 bg-background border border-primary/40 rounded-full p-1.5 text-primary hacker-glow shadow-[0_0_10px_rgba(0,245,212,0.3)] z-30 pointer-events-none group-hover:scale-110 transition-transform">
+              <RefreshCw size={14} className="opacity-80" />
+            </div>
           </div>
 
           {/* Name & Titles */}
@@ -337,42 +422,78 @@ Nice try! 😆😅😉 But you don't have sudo access to my portfolio.`,
             <p className="text-[10px] lg:text-xs text-muted-foreground uppercase tracking-widest mt-0.5 lg:mt-1">
               Frontend Developer
             </p>
+            <div className="mt-2 flex flex-col gap-1 text-[10px] lg:text-[11px] text-muted-foreground/70 lg:items-center">
+              <span>ex-StartDate Technologies <span className="opacity-60">— Frontend Dev</span></span>
+              <span>ex-LoomyLabs <span className="opacity-60">— Frontend Intern</span></span>
+            </div>
 
             {/* Mobile-only compact info */}
             <div className="flex lg:hidden flex-wrap gap-x-3 gap-y-1 mt-1.5 text-[10px] text-muted-foreground opacity-80">
               <span className="flex items-center truncate">📍 Hyderabad</span>
-              <span className="flex items-center truncate">🎓 B.E. CS '25</span>
               <span className="flex items-center text-[#00F5D4] drop-shadow-[0_0_8px_rgba(0,245,212,0.6)] truncate">🟢 Open to roles</span>
             </div>
           </div>
         </div>
 
         {/* Info Cards - Desktop Only */}
-        <div className="hidden lg:block text-center text-xs lg:text-xs text-muted-foreground space-y-3 mt-2 w-full">
-          <div className="border border-border p-3 rounded-lg bg-background/20 backdrop-blur-sm transition-all duration-300 hover:border-primary/30">
-            <p className="mb-1">📍 Hyderabad, India</p>
-            <p className="mb-1">🎓 B.E. in CS (AI & ML) '25</p>
-            <p className="mb-1 text-[#00F5D4] drop-shadow-[0_0_8px_rgba(0,245,212,0.6)]">🟢 Open to opportunities</p>
+        <div className="hidden lg:flex flex-col text-center text-xs lg:text-xs text-muted-foreground w-full mt-6 gap-6">
+          <div className="space-y-1.5 transition-all duration-300">
+            <p>📍 Hyderabad, India</p>
+            <p className="text-[#00F5D4] drop-shadow-[0_0_8px_rgba(0,245,212,0.6)]">🟢 Open to opportunities</p>
+          </div>
+
+
+          {/* Social Links */}
+          <div>
+            <div className="flex justify-center gap-5">
+              <a href="https://github.com/saivaraprasadmandala" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors hover:drop-shadow-[0_0_8px_rgba(0,245,212,0.8)]" title="GitHub">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.51 2-5-2-7-2"/></svg>
+              </a>
+              <a href="https://www.linkedin.com/in/saivaraprasadmandala/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors hover:drop-shadow-[0_0_8px_rgba(0,245,212,0.8)]" title="LinkedIn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/></svg>
+              </a>
+              <a href="https://x.com/msvp2k04" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors hover:drop-shadow-[0_0_8px_rgba(0,245,212,0.8)]" title="Twitter / X">
+                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/></svg>
+              </a>
+              <a href="mailto:mandalasaivaraprasad@gmail.com" className="text-muted-foreground hover:text-primary transition-colors hover:drop-shadow-[0_0_8px_rgba(0,245,212,0.8)]" title="Email">
+                <Mail size={22} strokeWidth={1.5} />
+              </a>
+            </div>
+          </div>
+
+          {/* Quote Info */}
+          <div className="border border-border p-3 rounded-lg bg-background/20 backdrop-blur-sm transition-all duration-300 hover:border-primary/40 hacker-border-glow">
+            <div className="text-muted-foreground text-xs font-mono leading-relaxed opacity-90 break-words">
+              <div key={quoteIndex} className="line-fade-in inline">
+                <span className="text-accent">{MOVIE_QUOTES[quoteIndex]}</span>
+              </div>
+              <span
+                className={`ml-1 inline-block w-1.5 h-3 bg-accent align-middle transition-opacity duration-100 ${
+                  cursorOn ? "opacity-100" : "opacity-0"
+                }`}
+                aria-hidden="true"
+              />
+            </div>
           </div>
         </div>
       </div>
 
       {/* Right Panel - Terminal (Scrollable) */}
       <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-        {/* Header - Clickable Commands with Bracket Affordance */}
-        <div className="border-b border-border px-2 py-2 lg:px-3 lg:py-2 bg-background/80 backdrop-blur-md flex-shrink-0 overflow-x-auto">
-          <div className="flex items-center whitespace-nowrap gap-2 lg:gap-3">
-            {Object.keys(commands).map((cmd) => (
-              <button
-                key={cmd}
-                onClick={() => handleCommand(cmd)}
-                className="px-2 py-1 text-xs lg:text-sm text-primary transition-all duration-300 cursor-pointer border-b border-transparent hover:border-primary hover:bg-primary/10 hover:shadow-[0_0_10px_rgba(0,245,212,0.2)] rounded-sm opacity-80 hover:opacity-100"
-              >
-                [{cmd}]
-              </button>
-            ))}
+        {/* MacOS Terminal Style Top Bar */}
+        <div className="border-b border-border/50 px-4 py-3 bg-background/90 backdrop-blur-md flex-shrink-0 flex items-center shadow-sm z-10 relative">
+          <div className="flex gap-2 w-16 shrink-0">
+            <div className="w-3 h-3 rounded-full bg-red-500/80"></div>
+            <div className="w-3 h-3 rounded-full bg-yellow-500/80"></div>
+            <div className="w-3 h-3 rounded-full bg-green-500/80"></div>
           </div>
+          <div className="flex-1 text-center text-[10px] sm:text-xs text-muted-foreground font-mono font-medium opacity-80 select-none overflow-hidden whitespace-nowrap truncate">
+            svp@portfolio - zsh
+          </div>
+          <div className="w-16 shrink-0"></div>
         </div>
+
+
 
         {/* Mobile-only disclaimer */}
         <div className="lg:hidden px-3 py-1.5 bg-background border-b border-border text-center">
@@ -390,7 +511,7 @@ Nice try! 😆😅😉 But you don't have sudo access to my portfolio.`,
           {lines.map((line, index) => (
             <div key={index} className="mb-1 line-fade-in">
               {line.type === "command" && (
-                <div className="text-accent break-all">{line.content}</div>
+                <div className="text-accent break-all text-sm lg:text-base">{line.content}</div>
               )}
               {line.type === "output" && (
                 <div className="text-foreground whitespace-pre-wrap leading-relaxed text-sm lg:text-base break-words">
@@ -398,7 +519,7 @@ Nice try! 😆😅😉 But you don't have sudo access to my portfolio.`,
                 </div>
               )}
               {line.type === "welcome" && (
-                <div className="text-accent break-all">{line.content}</div>
+                <div className="text-accent break-all text-sm lg:text-base">{line.content}</div>
               )}
             </div>
           ))}
@@ -478,10 +599,10 @@ Nice try! 😆😅😉 But you don't have sudo access to my portfolio.`,
               </span>
             )}
           </div>
-          <span className="text-right flex-shrink-0 ml-2">
-            <span className="hidden sm:inline">{date} </span>
-            {time}
-          </span>
+          <div className="text-right flex-shrink-0 ml-2 flex items-center gap-1.5 opacity-60">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#00F5D4] animate-pulse"></span>
+            <span className="hidden sm:inline">SESSION_ACTIVE</span>
+          </div>
         </div>
       </div>
     </div>
