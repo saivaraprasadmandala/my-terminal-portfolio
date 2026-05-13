@@ -48,9 +48,16 @@
 html,
 body {
   height: 100%;
-  overflow: hidden;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   background-color: var(--background);
+}
+
+/* Lock overflow only on desktop — mobile needs to scroll the stacked layout */
+@media (min-width: 1024px) {
+  html,
+  body {
+    overflow: hidden;
+  }
 }
 
 /* Custom scrollbar utilities */

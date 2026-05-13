@@ -161,8 +161,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className="bg-black overflow-hidden">
-        {children}
+      <body className="bg-[#020403]">{children}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{

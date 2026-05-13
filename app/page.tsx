@@ -52,15 +52,15 @@ function linkify(text: string) {
 
 const MOVIE_QUOTES = [
   `$ git commit -m "feat: looking for someone who commits — not just to main"`,
-  `"The first rule of my code: you do not push to main on a Friday."`,
-  `> 404: Sleep not found. Fueling with 😉🌝`,
-  `> "It works on my machine" is a valid architectural pattern.`,
+  `$ The first rule of my code: you do not push to main on a Friday.`,
+  `$ 404: Sleep not found. Fueling with movies.`,
+  `$ "It works on my machine" is a valid architectural pattern.`,
   `$ rm -rf node_modules && npm install && pray`,
-  `> Debugging: Being the detective where you are also the murderer.`,
-  `> I don't always test my code, but when I do, it's in production.`,
+  `$ Debugging: Being the detective where you are also the murderer.`,
+  `$ Finalist: Smart India Hackathon 2023 😎`,
   `$ sudo make me a frontend developer`,
-  `> Started as a vibe coder, now I actually read the docs. Character development.`,
-  `> Transitioning from "it works, don't touch it" to "let me understand why".`,
+  `$ Started as a vibe coder, now I actually read the docs. Character development.`,
+  `$ Transitioning from "it works, don't touch it" to "let me understand why".`,
   `$ npm install vibes --save-dev && npm run actual-learning`,
 ];
 
@@ -73,30 +73,16 @@ export default function TerminalPortfolio() {
   const inputRef = useRef<HTMLInputElement>(null);
   const terminalRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const isBootingRef = useRef(true); // prevents scroll-jank during boot on mobile
   const [date, setDate] = useState<string>("");
   const [time, setTime] = useState<string>("");
   const [suggestion, setSuggestion] = useState<string | null>(null);
   const [isTyping, setIsTyping] = useState(true);
   const [typingText, setTypingText] = useState("");
   const [isProfileFlipped, setIsProfileFlipped] = useState(false);
-  const [showFlipTooltip, setShowFlipTooltip] = useState(false);
-  const [hasFlippedOnce, setHasFlippedOnce] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (!hasFlippedOnce) {
-        setShowFlipTooltip(true);
-      }
-    }, 5000); // Wait 5 seconds before showing tooltip
-    return () => clearTimeout(timer);
-  }, [hasFlippedOnce]);
 
   const handleProfileFlip = () => {
     setIsProfileFlipped(!isProfileFlipped);
-    if (!hasFlippedOnce) {
-      setHasFlippedOnce(true);
-      setShowFlipTooltip(false);
-    }
   };
   const { down, up } = useAudio(true);
   const [quoteIndex, setQuoteIndex] = useState(0);
@@ -108,6 +94,14 @@ export default function TerminalPortfolio() {
       setQuoteIndex((prev) => (prev + 1) % MOVIE_QUOTES.length);
     }, 4000);
     return () => clearInterval(id);
+  }, []);
+
+  // Desktop-only auto-focus — don't focus on mobile (it scrolls the page & pops keyboard)
+  useEffect(() => {
+    const isTouch = window.matchMedia("(hover: none) and (pointer: coarse)").matches;
+    if (!isTouch) {
+      inputRef.current?.focus();
+    }
   }, []);
 
   // Cursor blink
@@ -192,11 +186,11 @@ Nice try! 😆😅😉 But you don't have sudo access to my portfolio.`,
 
 
     const bootLines = [
-      { text: "portfolio-os v2.0 | Booting consciousness...", delay: 0 },
-      { text: "BIOS   B.E. CSE '25 degree authenticated .. ✓\n", delay: 600 },
-      { text: "CPU    CMD > CTRL (Surviving all day) ..... ✓", delay: 900 },
-      { text: "DISK   6 projects, 2 internships, 0 regrets ✓", delay: 1300 },
-      { text: "GPU    Can render film debates for hours .. ✓\n", delay: 1700 },
+      { text: "portfolio-os v2.0 | booting ..... ✓", delay: 0 },
+      { text: "BIO  degree: B.E. CSE '25 ..... ✓\n", delay: 600 },
+      { text: "CPU   CMD > CTRL (all day) ..... ✓", delay: 900 },
+      { text: "DISK  6 projects, 0 regrets ... ✓", delay: 1300 },
+      { text: "GPU   film debates: on ......... ✓\n", delay: 1700 },
     ];
 
     const welcomeText = `Welcome! Type a command below to explore.
@@ -216,7 +210,7 @@ Nice try! 😆😅😉 But you don't have sudo access to my portfolio.`,
       timeouts.push(t);
     });
 
-    // After boot, show welcome with typing animation
+    // Boot is done — mark booting complete then show welcome
     const welcomeTimeout = setTimeout(() => {
       setLines(prev => [
         ...prev,
@@ -238,6 +232,7 @@ Nice try! 😆😅😉 But you don't have sudo access to my portfolio.`,
             ...prev,
             { type: "output", content: welcomeText },
           ]);
+          isBootingRef.current = false; // ✅ boot complete — enable scroll
         }
       }, 20);
 
@@ -248,9 +243,11 @@ Nice try! 😆😅😉 But you don't have sudo access to my portfolio.`,
     return () => timeouts.forEach(t => clearTimeout(t));
   }, []);
 
-  // Smooth scroll to bottom when new lines are added
+  // Scroll to bottom — only after boot completes (prevents page-scroll jank on mobile)
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (isBootingRef.current) return;
+    const el = terminalRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
   }, [lines, typingText]);
 
   const handleCommand = (cmd: string) => {
@@ -353,133 +350,90 @@ Nice try! 😆😅😉 But you don't have sudo access to my portfolio.`,
 
   return (
     <ErrorBoundary>
-    <div className="h-screen bg-background text-primary font-mono flex flex-col lg:flex-row overflow-hidden">
+    <div className="min-h-screen w-screen lg:h-screen lg:overflow-hidden bg-background text-primary font-mono flex flex-col lg:flex-row">
       {/* Left Panel - Profile */}
-      <div className="w-full lg:w-[360px] xl:w-[420px] lg:h-full p-4 lg:p-6 border-b lg:border-b-0 lg:border-r border-border bg-background/50 backdrop-blur-sm shrink-0 flex flex-col justify-start">
-        <div className="flex flex-row items-center gap-4 sm:gap-6 lg:flex-col lg:gap-0 lg:items-center">
-          {/* Profile Image with 3D Flip */}
-          <div 
-            className="relative w-24 h-24 sm:w-28 sm:h-28 lg:w-48 lg:h-48 lg:mb-6 flex-shrink-0 cursor-pointer group"
+      <div className="w-full lg:w-[360px] xl:w-[420px] lg:h-full px-5 py-6 lg:p-6 border-b lg:border-b-0 lg:border-r border-border bg-background/50 backdrop-blur-sm shrink-0 flex flex-col items-center gap-5 lg:overflow-y-auto">
+        <div className="flex flex-col items-center gap-5 w-full max-w-xs lg:max-w-none">
+
+          {/* Profile Image with 3D Flip - always centered */}
+          <div
+            className="relative w-32 h-32 lg:w-44 lg:h-44 flex-shrink-0 cursor-pointer group"
             style={{ perspective: '1000px' }}
             onClick={handleProfileFlip}
           >
-            {/* Tooltip */}
-            {showFlipTooltip && (
-              <div className="absolute -top-10 left-1/2 -translate-x-1/2 whitespace-nowrap bg-primary/10 text-primary border border-primary/30 px-3 py-1 text-[10px] rounded animate-bounce z-20 backdrop-blur-sm pointer-events-none transition-opacity duration-300">
-                flip to reveal 😉
-                <div className="absolute top-full left-1/2 -translate-x-1/2 border-[5px] border-transparent border-t-primary/30"></div>
-              </div>
-            )}
-            
             {/* 3D Inner Container */}
-            <div 
+            <div
               className="w-full h-full transition-transform duration-700 ease-out relative"
-              style={{ 
-                transformStyle: 'preserve-3d', 
-                transform: isProfileFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)'
-              }}
+              style={{ transformStyle: 'preserve-3d', transform: isProfileFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)' }}
             >
-              {/* Front side: "no pfp" image */}
-              <div 
-                className="absolute inset-0 w-full h-full border border-primary/40 rounded-full overflow-hidden bg-white hacker-border-glow shadow-[0_0_15px_rgba(0,245,212,0.2)]"
-                style={{ backfaceVisibility: 'hidden' }}
-              >
-                <Image
-                  src="/flip-profile-pic.png"
-                  alt="No pfp because you'll fall in love"
-                  width={200}
-                  height={200}
-                  className="w-full h-full object-cover"
-                />
+              {/* Front: "no pfp" */}
+              <div className="absolute inset-0 w-full h-full border border-primary/40 rounded-full overflow-hidden bg-white hacker-border-glow shadow-[0_0_15px_rgba(0,245,212,0.2)]" style={{ backfaceVisibility: 'hidden' }}>
+                <Image src="/flip-profile-pic.png" alt="No pfp because you'll fall in love" width={200} height={200} className="w-full h-full object-cover" />
               </div>
-
-              {/* Back side: Actual profile image */}
-              <div 
-                className="absolute inset-0 w-full h-full border border-primary/40 rounded-full overflow-hidden bg-background/50 hacker-border-glow shadow-[0_0_15px_rgba(0,245,212,0.2)]"
-                style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
-              >
-                <Image
-                  src="/profile-zoomed.png"
-                  alt="Mandala Sai Vara Prasad"
-                  width={200}
-                  height={200}
-                  className="w-full h-full object-cover"
-                />
+              {/* Back: real photo */}
+              <div className="absolute inset-0 w-full h-full border border-primary/40 rounded-full overflow-hidden bg-background/50 hacker-border-glow shadow-[0_0_15px_rgba(0,245,212,0.2)]" style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>
+                <Image src="/profile-zoomed.png" alt="Mandala Sai Vara Prasad" width={200} height={200} className="w-full h-full object-cover" />
               </div>
             </div>
-
-            {/* Always-visible Flip Indicator Icon */}
-            <div className="absolute bottom-0 right-0 lg:bottom-2 lg:right-2 bg-background border border-primary/40 rounded-full p-1.5 text-primary hacker-glow shadow-[0_0_10px_rgba(0,245,212,0.3)] z-30 pointer-events-none group-hover:scale-110 transition-transform">
+            {/* Flip indicator */}
+            <div className="absolute bottom-0 right-0 bg-background border border-primary/40 rounded-full p-1.5 text-primary hacker-glow shadow-[0_0_10px_rgba(0,245,212,0.3)] z-30 pointer-events-none group-hover:scale-110 transition-transform">
               <RefreshCw size={14} className="opacity-80" />
             </div>
           </div>
 
-          {/* Name & Titles */}
-          <div className="flex-1 lg:w-full lg:text-center min-w-0">
-            <h1 className="text-base sm:text-lg lg:text-xl font-bold text-primary hacker-glow leading-tight">
+          {/* Identity - always centered */}
+          <div className="text-center w-full">
+            <h1 className="text-xl lg:text-2xl font-bold text-primary hacker-glow leading-tight">
               Sai Vara Prasad Mandala
             </h1>
-            <p className="text-[10px] lg:text-xs text-muted-foreground uppercase tracking-widest mt-0.5 lg:mt-1">
+            <p className="text-[11px] text-muted-foreground uppercase tracking-widest mt-1">
               Frontend Developer
             </p>
-            <div className="mt-2 flex flex-col gap-1 text-[10px] lg:text-[11px] text-muted-foreground/70 lg:items-center">
+            <div className="mt-1.5 flex flex-col gap-0.5 text-[11px] text-muted-foreground/70 items-center">
               <span>ex-StartDate Technologies <span className="opacity-60">— Frontend Dev</span></span>
               <span>ex-LoomyLabs <span className="opacity-60">— Frontend Intern</span></span>
             </div>
+            <p className="text-[11px] text-muted-foreground mt-2">📍 Hyderabad, India</p>
+            <p className="text-[11px] text-[#00F5D4] drop-shadow-[0_0_8px_rgba(0,245,212,0.6)] mt-0.5">🟢 Open to opportunities</p>
+          </div>
 
-            {/* Mobile-only compact info */}
-            <div className="flex lg:hidden flex-wrap gap-x-3 gap-y-1 mt-1.5 text-[10px] text-muted-foreground opacity-80">
-              <span className="flex items-center truncate">📍 Hyderabad</span>
-              <span className="flex items-center text-[#00F5D4] drop-shadow-[0_0_8px_rgba(0,245,212,0.6)] truncate">🟢 Open to roles</span>
+          {/* Social Links — equal icon-box buttons, always visible */}
+          <div className="w-full">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground/50 mb-2 text-center">Links</div>
+            <nav className="flex items-center justify-between gap-2">
+              <a href="https://github.com/saivaraprasadmandala" target="_blank" rel="noopener noreferrer" title="GitHub"
+                className="flex flex-1 items-center justify-center h-11 rounded-md border border-border text-muted-foreground hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.51 2-5-2-7-2"/></svg>
+              </a>
+              <a href="https://www.linkedin.com/in/saivaraprasadmandala/" target="_blank" rel="noopener noreferrer" title="LinkedIn"
+                className="flex flex-1 items-center justify-center h-11 rounded-md border border-border text-muted-foreground hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/></svg>
+              </a>
+              <a href="https://x.com/msvp2k04" target="_blank" rel="noopener noreferrer" title="X / Twitter"
+                className="flex flex-1 items-center justify-center h-11 rounded-md border border-border text-muted-foreground hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/></svg>
+              </a>
+              <a href="mailto:mandalasaivaraprasad@gmail.com" title="Email"
+                className="flex flex-1 items-center justify-center h-11 rounded-md border border-border text-muted-foreground hover:text-primary hover:border-primary/40 hover:bg-primary/5 transition-colors">
+                <Mail size={18} strokeWidth={1.5} />
+              </a>
+            </nav>
+          </div>
+
+          {/* Quote — always visible */}
+          <div className="w-full border border-border p-3 rounded-lg bg-background/20 backdrop-blur-sm hover:border-primary/40 hacker-border-glow transition-all duration-300">
+            <div className="text-muted-foreground text-xs font-mono leading-relaxed opacity-90 break-words text-center">
+              <span key={quoteIndex} className="text-accent line-fade-in">{MOVIE_QUOTES[quoteIndex]}</span>
+              <span className={`ml-1 inline-block w-1.5 h-3 bg-accent align-middle transition-opacity duration-100 ${cursorOn ? 'opacity-100' : 'opacity-0'}`} aria-hidden="true" />
             </div>
           </div>
-        </div>
-
-        {/* Info Cards - Desktop Only */}
-        <div className="hidden lg:flex flex-col text-center text-xs lg:text-xs text-muted-foreground w-full mt-6 gap-6">
-          <div className="space-y-1.5 transition-all duration-300">
-            <p>📍 Hyderabad, India</p>
-            <p className="text-[#00F5D4] drop-shadow-[0_0_8px_rgba(0,245,212,0.6)]">🟢 Open to opportunities</p>
-          </div>
 
 
-          {/* Social Links */}
-          <div>
-            <div className="flex justify-center gap-5">
-              <a href="https://github.com/saivaraprasadmandala" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors hover:drop-shadow-[0_0_8px_rgba(0,245,212,0.8)]" title="GitHub">
-                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"/><path d="M9 18c-4.51 2-5-2-7-2"/></svg>
-              </a>
-              <a href="https://www.linkedin.com/in/saivaraprasadmandala/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors hover:drop-shadow-[0_0_8px_rgba(0,245,212,0.8)]" title="LinkedIn">
-                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/></svg>
-              </a>
-              <a href="https://x.com/msvp2k04" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors hover:drop-shadow-[0_0_8px_rgba(0,245,212,0.8)]" title="Twitter / X">
-                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/></svg>
-              </a>
-              <a href="mailto:mandalasaivaraprasad@gmail.com" className="text-muted-foreground hover:text-primary transition-colors hover:drop-shadow-[0_0_8px_rgba(0,245,212,0.8)]" title="Email">
-                <Mail size={22} strokeWidth={1.5} />
-              </a>
-            </div>
-          </div>
-
-          {/* Quote Info */}
-          <div className="border border-border p-3 rounded-lg bg-background/20 backdrop-blur-sm transition-all duration-300 hover:border-primary/40 hacker-border-glow">
-            <div className="text-muted-foreground text-xs font-mono leading-relaxed opacity-90 break-words">
-              <div key={quoteIndex} className="line-fade-in inline">
-                <span className="text-accent">{MOVIE_QUOTES[quoteIndex]}</span>
-              </div>
-              <span
-                className={`ml-1 inline-block w-1.5 h-3 bg-accent align-middle transition-opacity duration-100 ${
-                  cursorOn ? "opacity-100" : "opacity-0"
-                }`}
-                aria-hidden="true"
-              />
-            </div>
-          </div>
         </div>
       </div>
 
       {/* Right Panel - Terminal (Scrollable) */}
-      <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+      <div className="flex-1 flex flex-col lg:min-h-0 overflow-hidden">
         {/* MacOS Terminal Style Top Bar */}
         <div className="border-b border-border/50 px-4 py-3 bg-background/90 backdrop-blur-md flex-shrink-0 flex items-center shadow-sm z-10 relative">
           <div className="flex gap-2 w-16 shrink-0">
@@ -505,7 +459,7 @@ Nice try! 😆😅😉 But you don't have sudo access to my portfolio.`,
         {/* Terminal Content (Scrollable Area) */}
         <div
           ref={terminalRef}
-          className="flex-1 p-3 lg:p-4 overflow-y-auto cursor-text bg-background scrollbar-thin scrollbar-thumb-primary scrollbar-track-background"
+          className="flex-1 p-3 lg:p-4 overflow-y-auto cursor-text bg-background scrollbar-thin scrollbar-thumb-primary scrollbar-track-background min-h-[50vh] lg:min-h-0"
           onClick={focusInput}
         >
           {lines.map((line, index) => (
@@ -514,7 +468,7 @@ Nice try! 😆😅😉 But you don't have sudo access to my portfolio.`,
                 <div className="text-accent break-all text-sm lg:text-base">{line.content}</div>
               )}
               {line.type === "output" && (
-                <div className="text-foreground whitespace-pre-wrap leading-relaxed text-sm lg:text-base break-words">
+                <div className="text-foreground whitespace-pre-wrap leading-relaxed text-xs sm:text-sm lg:text-base break-words">
                   {linkify(line.content)}
                 </div>
               )}
@@ -527,7 +481,7 @@ Nice try! 😆😅😉 But you don't have sudo access to my portfolio.`,
           {/* Typing animation display */}
           {isTyping && typingText && (
             <div className="mb-1">
-              <div className="text-foreground whitespace-pre-wrap leading-relaxed text-sm lg:text-base break-words">
+              <div className="text-foreground whitespace-pre-wrap leading-relaxed text-xs sm:text-sm lg:text-base break-words">
                 {typingText}<span className="typing-cursor">&nbsp;</span>
               </div>
             </div>
@@ -558,13 +512,14 @@ Nice try! 😆😅😉 But you don't have sudo access to my portfolio.`,
               <input
                 ref={inputRef}
                 type="text"
+                inputMode="text"
+                enterKeyHint="send"
                 value={currentInput}
                 onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
                 onKeyUp={handleKeyUp}
-                className="absolute inset-0 bg-transparent border-none outline-none text-primary font-mono text-sm lg:text-base w-full caret-transparent p-0 m-0 leading-6 lg:leading-7 h-full"
+                className="absolute inset-0 bg-transparent border-none outline-none text-primary font-mono text-sm lg:text-base w-full lg:caret-transparent caret-primary p-0 m-0 leading-6 lg:leading-7 h-full"
                 style={{ zIndex: 2 }}
-                autoFocus
               />
               {/* Blinking cursor - positioned using invisible text measurement */}
               <div
